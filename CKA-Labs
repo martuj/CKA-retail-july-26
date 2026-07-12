@@ -3,7 +3,6 @@ Kuberntes Essential
 =============================================================
 Lab 1: Kubernetes Operations(kops) on AWS
 =============================================================
-
 ##Task 1: Launching an EC2 Instance
 #create an EC2 Instance Ubuntu Server26.04 LTS (HVM), SSD Volume type t2.micro
 
@@ -41,3 +40,73 @@ kops export kubeconfig --admin
 #For delete your entire cluster 
 =====================================
 example:  kops delete cluster --name=martuj-m1-k8s-2024-06-02-03-06.k8s.local --yes
+
+=============================================================
+Lab 2: HorizontalPodAutoscaler (HPA)
+=============================================================
+# Install Metrics Server on a  cluste ( Metrics Server deployed and configured) . The Kubernetes Metrics Server collects resource metrics from the kubelets in your cluster, 
+# and exposes those metrics through the Kubernetes API, using an APIService to add new kinds of resource that represent metric readings. run the following command
+
+ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# Create deployment and service
+
+
+ubuntu@kops:~$ vi  php-apache.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+spec:
+  selector:
+    matchLabels:
+      run: php-apache
+  template:
+    metadata:
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - name: php-apache
+        image: registry.k8s.io/hpa-example
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+  labels:
+    run: php-apache
+spec:
+  ports:
+  - port: 80
+  selector:
+    run: php-apache
+
+# save the file
+
+kubectl apply -f php-apache.yaml
+
+
+kubectl autoscale deployment php-apache --cpu=50% --min=1 --max=10
+
+kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
+# to stop metric pres ctrl+c
+
+kubectl get hpa php-apache --watch
+
+kubectl get deployment php-apache
+
+
+
+
+
+
+
