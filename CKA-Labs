@@ -5,7 +5,7 @@ Lab 1: Kubernetes Operations(kops) on AWS
 =============================================================
 
 ##Task 1: Launching an EC2 Instance
-#create an EC2 Instance Ubuntu Server22.04 LTS (HVM), SSD Volume type t2.micro
+#create an EC2 Instance Ubuntu Server26.04 LTS (HVM), SSD Volume type t2.micro
 
 ##Task 2: Create an IAM role
 Create an IAM role named "kops-admin-role" with the "AdministratorAccess" policy attached.
