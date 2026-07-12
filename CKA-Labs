@@ -40,9 +40,89 @@ kops export kubeconfig --admin
 #For delete your entire cluster 
 =====================================
 example:  kops delete cluster --name=martuj-m1-k8s-2024-06-02-03-06.k8s.local --yes
+=========================================================================
+Task-1  creating pod
+================================
+Imperative method
+----------
+ kubectl run test --image=nginx:latest
+
+kubectl get pod
+alias k=kubectl
+k get pod
+k get pod -o wide
+k get nodes
+k describe pod test
+
+task-2 declarative method
+-----------------------------
+ vi mypod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+
+
+k create -f mypod.yaml
+kubectl get pod
+alias k=kubectl
+k get pod
+k get pod -o wide
+k get nodes
+k describe pod nginx-pod
+
+kubectl api-resources
+k get po -n kube-system
+k delete pod nginx-pod
+k delete pod nginx-pod
+=============================================================
+Task-3 ReplicaSet
+----------------------------
+vi nginx-rs.yaml 
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+
+kubectl create -f nginx-rs.yaml
+kubectl  get pods
+kubectl get pod -l app=nginx
+kubectl get rs nginx-rs -o wide
+kubectl  describe rs nginx-rs
+kubectl get pod
+kubectl delete pod nginx-rs-764mq
+kubectl get pod
+kubectl get rs
+kubectl delete rs nginx-rs
+kubectl get rs
+kubectl get po
+
+
 
 =============================================================
-Lab 2: HorizontalPodAutoscaler (HPA)
+Lab 3: HorizontalPodAutoscaler (HPA)
 =============================================================
 # Install Metrics Server on a  cluste ( Metrics Server deployed and configured) . The Kubernetes Metrics Server collects resource metrics from the kubelets in your cluster, 
 # and exposes those metrics through the Kubernetes API, using an APIService to add new kinds of resource that represent metric readings. run the following command
