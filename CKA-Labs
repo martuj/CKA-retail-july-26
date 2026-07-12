@@ -90,21 +90,156 @@ spec:
   selector:
     run: php-apache
 
-# save the file
+# save the file and run it
 
 kubectl apply -f php-apache.yaml
 
-
+# Create the HorizontalPodAutoscaler
 kubectl autoscale deployment php-apache --cpu=50% --min=1 --max=10
 
+# You can check the current status of the newly-made HorizontalPodAutoscaler, by running:
+kubectl get hpa
+
+#Increase the load 
 kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
 # to stop metric pres ctrl+c
 
+# open another window and run this
+#Here, CPU consumption has increased to 305% of the request. As a result, the Deployment was resized to 7 replicas:
 kubectl get hpa php-apache --watch
 
+# open one more window
 kubectl get deployment php-apache
 
+================= =============================================================================
+Task-2 get the YAML of your HorizontalPodAutoscaler in the autoscaling/v2
+----------------------------------------------------------------------------------------------
 
+kubectl get hpa php-apache -o yaml > /tmp/hpa-v2.yaml
+
+Open the /tmp/hpa-v2.yaml file in an editor, and you should see YAML which looks like this:
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+status:
+  observedGeneration: 1
+  lastScaleTime: <some-time>
+  currentReplicas: 1
+  desiredReplicas: 1
+  currentMetrics:
+  - type: Resource
+    resource:
+      name: cpu
+      current:
+        averageUtilization: 0
+        averageValue: 0
+
+------------------------------------------------------------------------
+
+Task-3 Creating the autoscaler declaratively
+
+-----------------------------------------------------------------------------
+vi hpa-php-apache.yaml
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+
+# save and run the file
+
+===========================================
+Understand the Example: your HorizontalPodAutoscaler would attempt to ensure that each pod was consuming roughly 50% of its requested CPU, serving 1000 packets per second, 
+and that all pods behind the main-route Ingress were serving a total of 10000 requests per second
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  - type: Pods
+    pods:
+      metric:
+        name: packets-per-second
+      target:
+        type: AverageValue
+        averageValue: 1k
+  - type: Object
+    object:
+      metric:
+        name: requests-per-second
+      describedObject:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        name: main-route
+      target:
+        type: Value
+        value: 10k
+status:
+  observedGeneration: 1
+  lastScaleTime: <some-time>
+  currentReplicas: 1
+  desiredReplicas: 1
+  currentMetrics:
+  - type: Resource
+    resource:
+      name: cpu
+    current:
+      averageUtilization: 0
+      averageValue: 0
+  - type: Object
+    object:
+      metric:
+        name: requests-per-second
+      describedObject:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        name: main-route
+      current:
+        value: 10k
 
 
 
