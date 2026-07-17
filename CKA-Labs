@@ -155,7 +155,7 @@ kubectl apply -f dep-nginx.yaml
 
 kubectl get deployments
 kubectl get rs
-
+kubectl get pod -w
 
 =============================================================
 Lab 3: HorizontalPodAutoscaler (HPA)
