@@ -118,6 +118,44 @@ kubectl get rs
 kubectl delete rs nginx-rs
 kubectl get rs
 kubectl get po
+---------------------------------------------------------
+Task:4 Deployment
+---------------------------------------------------------
+vi dep-nginx.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-dep
+  labels:
+    app: nginx-dep
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1  # maxUnavailable: 1 → at most one pod can be unavailable during updates.
+      maxSurge: 1   # maxSurge: 1 → Kubernetes can create one extra pod above the desired replica count during updates.
+  selector:
+    matchLabels:
+      app: nginx-app
+  template:
+    metadata:
+      labels:
+        app: nginx-app
+    spec:
+      containers:
+        - name: nginx-ctr
+          image: nginx:1.11
+          ports:
+            - containerPort: 80
+
+
+kubectl apply -f dep-nginx.yaml
+
+kubectl get deployments
+kubectl get rs
+
 
 =============================================================
 Lab 3: HorizontalPodAutoscaler (HPA)
@@ -800,4 +838,16 @@ kubectl delete -f pv-pod.yaml
 kubectl delete -f pv-claim.yaml
 kubectl delete -f pv-volume.yaml
 =============================================================
+image:
+      reference: quay.io/crio/artifact:v2
+      pullPolicy: IfNotPresent
+
+
+Always
+The kubelet always attempts to pull the reference. If the pull fails, the kubelet sets the Pod to Failed.
+Never
+The kubelet never pulls the reference and only uses a local image or artifact. The Pod becomes Failed if any layers of the image aren't already present locally, or if the manifest for that image isn't already cached.
+IfNotPresent
+The kubelet pulls if the reference isn't already present on disk. The Pod becomes Failed if the reference isn't present and the pull fails.
+==============================================================================
 
