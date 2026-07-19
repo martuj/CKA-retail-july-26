@@ -2126,7 +2126,7 @@ kubectl get pods -o wide
 both pod are in same node
 
 ---------------------------------------------------------------------
-Task 4: pod anti affinity
+Task 4: pod anti affinity m
 ---------------------------------------------------------------------
 
 vi pod-antiaff.yaml
